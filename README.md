@@ -1,2 +1,11 @@
-# simple-phys
-simple physics simulator
+CONCEPTS:
+
+
+TODO LIST:
+
+
+WISHLIST?:
+
+
+ASSUMPTIONS:
+
