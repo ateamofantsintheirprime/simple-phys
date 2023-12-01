@@ -11,6 +11,7 @@
 
 #include "include/raylib.h"
 #include "agent.h"
+#include "agent_manager.h"
 #include "basic.h"
 #include "draw.h"
 
@@ -21,27 +22,23 @@
 
 struct timespec start, stop;
 
-
 int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Game Window");
-    // SetTargetFPS(MAX_FPS);
-    //Agent agent_list[AGENT_COUNT];
+    AgentManager agent_manager;
+    init_manager(&agent_manager);
 
-    Agent *agent_list = calloc(MAX_AGENT_COUNT, sizeof(Agent));
-    if (agent_list == NULL) {
-      printf("WARNING CALLOC FAILED\n");
-    }
+    // Agent *agent_list = calloc(MAX_AGENT_COUNT, sizeof(Agent));
+    // if (agent_list == NULL) {
+    //   printf("WARNING CALLOC FAILED\n");
+    // }
 
-    for (size_t i = 0; i < MAX_AGENT_COUNT; i++) {
-        init_agent(&agent_list[i]);
-    }
-
-    printf("WINDOW DIMENSIONS: {%d, %d}\n", WINDOW_WIDTH, WINDOW_HEIGHT);
-    int active_agents = 0;
-    // struct timespec start, stop;
+    // for (size_t i = 0; i < MAX_AGENT_COUNT; i++) {
+    //     init_agent(&agent_list[i]);
+    // }
+    // int active_agents = 0;
 
     // pid_t pid = fork();
     //--------------------------------------------------------------------------------------
@@ -49,37 +46,14 @@ int main(void)
 // Main game loop
 while (!WindowShouldClose())
 {
-    // Get Framerate
-    double framerate = get_fps(start, stop);
-    clock_gettime( CLOCK_REALTIME, &start);
-
     printf("RAYLIB FPS: %d\n", GetFPS());
     printf("RAYLIB Frametime: %f\n", GetFrameTime());
-    printf("MY FPS:     %f\n", framerate);
-    printf("TIME:     %f\n", GetTime());
+    printf("AGENT COUNT %d\n", agent_manager.agent_count);
     // Update
     //----------------------------------------------------------------------------------
-    for (size_t repeats = 0; repeats < 8; repeats ++) {
-        float max_overlap = 0;
-        for (size_t i = 0; i < active_agents; i++) {
-            for (size_t j = 0; j < active_agents; j++) {
-                if (i != j) {
-                    // Can't be colliding with ourselves, lads
-                    float overlap = collide(&agent_list[i], &agent_list[j]);
-                    if (overlap > max_overlap) {
-                        max_overlap = overlap;
-                    }
-                }
-            }
-        }
-        printf("Max overlap: %f\n", max_overlap);
-    }
-    for (size_t i = 0; i < active_agents; i++) {
-        move(&agent_list[i], GetFrameTime());
-    }
-    if (IsMouseButtonDown(0) && active_agents < MAX_AGENT_COUNT) {
-        set_pos(&agent_list[active_agents], GetMousePosition());
-        active_agents += 1;
+    update_agents(&agent_manager, GetFrameTime());
+    if (IsMouseButtonDown(0) && agent_manager.agent_count < MAX_AGENT_COUNT) {
+        new_agent(&agent_manager, GetMousePosition());
     }
 
     // Draw
@@ -87,8 +61,8 @@ while (!WindowShouldClose())
     BeginDrawing();
 
         ClearBackground(BLANK);
-        for (size_t i = 0; i < active_agents; i++) {
-            draw_agent(agent_list[i]);
+        for (size_t i = 0; i < agent_manager.agent_count; i++) {
+            draw_agent(agent_manager.agent_list[i]);
         }
 
     EndDrawing();
@@ -98,6 +72,7 @@ while (!WindowShouldClose())
 // De-Initialization
 //--------------------------------------------------------------------------------------
 CloseWindow();
+uninit_manager(&agent_manager);
 
 return 0;
 }
